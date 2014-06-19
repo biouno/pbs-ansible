@@ -1,0 +1,3 @@
+---
+pbs_path: /var/spool/torque
+server_name: torqueserver

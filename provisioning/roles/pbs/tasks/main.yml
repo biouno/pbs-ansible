@@ -1,0 +1,42 @@
+- name: copy hosts file
+  copy: dest=/etc/hosts src=hosts mode=755
+
+- name: install packages
+  apt: pkg={{item}} state=present update_cache=yes
+  with_items:
+  - torque-server
+  - torque-scheduler
+  - torque-client
+  - torque-mom
+
+- name: copy server_name file
+  copy: dest=/var/spool/torque/server_name src=server_name mode=755
+
+- name: copy mom_priv config file
+  copy: dest=/var/spool/torque/mom_priv/config src=config mode=755
+
+- name: kill pbs_server process
+  action: shell kill -9 `ps aux | grep -v grep | grep pbs_server | awk '{print $2}'`
+  ignore_errors: True 
+
+- name: recreate pbs db
+  shell: yes | pbs_server -t create -f
+
+- name: copy server_priv nodes file
+  copy: dest=/var/spool/torque/server_priv/nodes src=nodes mode=755
+
+- command: qmgr -c "set server scheduling=true"
+- command: qmgr -c "create queue batch queue_type=execution"
+- command: qmgr -c "set queue batch started=true"
+- command: qmgr -c "set queue batch enabled=true"
+- command: qmgr -c "set queue batch resources_default.walltime=240:00:00"
+- command: qmgr -c "set server default_queue=batch"
+- command: qmgr -c "set server operators = root@torqueserver"
+- command: qmgr -c "set server keep_completed = 0"
+- command: qmgr -c "set queue batch resources_default.neednodes = 1:ppn=1"
+- command: qmgr -c "set server acl_roots+=root@*"
+- command: qterm -t quick
+- command: pbs_server
+
+- name: copy rhosts
+  copy: dest=/root/.rhosts src=rhosts mode=755

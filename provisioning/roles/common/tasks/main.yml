@@ -1,0 +1,18 @@
+- name: set timezone to UTC
+  lineinfile: dest=/etc/timezone state=present insertbefore=BOF
+              regexp="^Etc/UTC" line="Etc/UTC"
+  register: timezone
+
+- name: reconfigure tzdata
+  shell: dpkg-reconfigure -f noninteractive tzdata
+  when: timezone.changed
+
+- name: copy over env variables
+  template: dest=/etc/profile.d/env.sh src=env.sh.j2 owner=root group=root mode=0755
+
+- name: install packages
+  apt: pkg={{item}} state=present update_cache=yes
+  with_items:
+  - build-essential
+  - htop
+  - ntp

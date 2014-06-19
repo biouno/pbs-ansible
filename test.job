@@ -1,0 +1,11 @@
+#! /bin/sh
+#PBS -N testjob
+#PBS -o testjob.out
+#PBS -e testjob.err
+#PBS -M <your_email_here>
+#PBS -l walltime=00:01:00
+
+date
+hostname
+sleep 20
+date
